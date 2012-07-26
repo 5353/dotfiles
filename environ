@@ -52,11 +52,6 @@ PAGER='less'
 HOSTALIASES="$HOME/code/dotfiles/hostaliases"
 NCURSES_NO_UTF8_ACS="1"
 
-case $LANG in *.utf8)
-    # make `tree` work correctly
-    LANG="${LANG%.utf8}.utf-8"
-esac
-
 # appdefaults
 
 ACK_PAGER="$PAGER"
