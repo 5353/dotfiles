@@ -56,8 +56,7 @@ NCURSES_NO_UTF8_ACS="1"
 
 ACK_PAGER="$PAGER"
 LESS="e M q R F X z -3"
-# TODO: Find an OS X equivalent of nproc
-# MAKEFLAGS="-j $(nproc)"
+ MAKEFLAGS="-j $(nproc)"
 
 # local
 
