@@ -62,7 +62,11 @@ link profile
 link gitconfig
 link gitignore
 
+have tmux &&
+    link tmux.conf
+
 link vimrc
 link vim
+
 
 exit 0
