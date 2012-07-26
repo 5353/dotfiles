@@ -62,4 +62,7 @@ link profile
 link gitconfig
 link gitignore
 
+link vimrc
+link vim
+
 exit 0
