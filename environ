@@ -12,6 +12,8 @@ setpath() {
     set +a; IFS=$xIFS; unset xIFS; set -a
 }
 
+have() { command -v "$1" >&/dev/null; }
+
 # basic environ
 
 umask 022
@@ -56,7 +58,11 @@ NCURSES_NO_UTF8_ACS="1"
 
 ACK_PAGER="$PAGER"
 LESS="e M q R F X z -3"
- MAKEFLAGS="-j $(nproc)"
+if have gnproc; then
+    MAKEFLAGS="-j $(gnproc)"
+elif have nproc; then
+    MAKEFLAGS="-j $(nproc)"
+fi
 
 # local
 
