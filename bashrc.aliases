@@ -1,0 +1,10 @@
+#!bash
+
+if [[ -f "/usr/local/Cellar/macvim/7.3-64/MacVim.app/Contents/MacOS/Vim" ]]; then
+    alias vim="/usr/local/Cellar/macvim/7.3-64/MacVim.app/Contents/MacOS/Vim"
+    alias vi="/usr/local/Cellar/macvim/7.3-64/MacVim.app/Contents/MacOS/Vim"
+fi
+
+gd() { git diff $* | view -; }
+gdc() { gd --cached $*; }
+

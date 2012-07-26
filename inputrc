@@ -1,0 +1,42 @@
+# ~/.inputrc: readline(3), bash(1) - Readline library configuration
+
+set show-all-if-ambiguous on
+set blink-matching-parent on
+set visible-stats on
+set revert-all-at-newline on
+
+# Arrows
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+# Home/End
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+"\e[H": beginning-of-line
+"\e[F": end-of-line
+# Insert/Delete
+"\e[2~": overwrite-mode
+"\e[3~": delete-char
+# Ctrl-arrows (Xterm)
+"\e[1;5D": backward-word
+"\e[1;5C": forward-word
+# Ctrl-arrows (PuTTY)
+"\e[OD": backward-word
+"\e[OC": forward-word
+# Page Up/Down
+"\e[5~": ""
+"\e[6~": menu-complete
+# Shift-Tab
+#"\C-i": menu-complete
+"\e[Z": complete-hostname
+
+"\e-": ""
+"\e0": ""
+"\e1": ""
+"\e2": ""
+"\e3": ""
+"\e4": ""
+"\e5": ""
+"\e6": ""
+"\e7": ""
+"\e8": ""
+"\e9": ""

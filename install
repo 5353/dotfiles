@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+log() { if [ -t 0 ]; then echo "$*"; fi; }
+
+have() { command -v "$1" >/dev/null; }
+
+link() {
+    local target=$dir/${1%/} link=${2:-$HOME/.$1}
+    if [ -e "$link" ]; then
+        if [ -k "$link" ]; then
+            log "Ignoring sticky ${link/#$HOME/~}"
+            return
+        elif [ -h "$link" ]; then
+            rm -f "$link"
+        else
+            trash "$link"
+        fi
+    else
+        local linkdir=${link%/*}
+        if [ ! -d "$linkdir" ]; then
+            mkdir -p "$linkdir"
+        fi
+    fi
+    sym -f "$target" "$link"
+}
+
+sym() { ~/code/stuff/bin/sym "$@"; }
+
+trash() {
+    local file
+    for file; do
+        if [ ! -e "$file" ]; then
+            continue
+        elif [ -k "$file" ]; then
+            log "Ignoring sticky ${file/#$HOME/~}"
+            continue
+        else
+            if [ ! -d "$trash" ]; then
+                mkdir -pm 0700 "$trash"
+            fi
+            echo "Backing up ${file/#$HOME/~} to ${trash/#$HOME/~}"
+            mv "$file" "$trash"
+        fi
+    done
+}
+
+set -e
+
+dir=$(dirname "$0")
+trash=~/Trash
+
+cd "$dir"
+
+trash ~/.{login,logout}
+trash ~/.bash_{login,profile,logout}
+trash ~/.{sh,csh}rc
+
+link bashrc
+link inputrc
+link profile
+
+link gitconfig
+link gitignore
+
+exit 0

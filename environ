@@ -1,0 +1,77 @@
+#!bash
+
+[ "$DEBUG" ] && echo "++ environ [self=$0]"
+
+joins() { var=$1; shift; eval "$var=\$*"; unset var; }
+
+setpath() {
+    # real sh does not allow unsetting IFS,
+    # and `foo=bar join` does not always work
+    set +a; xIFS=$IFS; IFS=":"; set -a
+    joins "$@"
+    set +a; IFS=$xIFS; unset xIFS; set -a
+}
+
+# basic environ
+
+umask 022
+
+set -a
+
+[ "$USER" ]     || USER=`id -un`
+[ "$UID" ]      || UID=`id -u`
+[ "$HOSTNAME" ] || HOSTNAME=`hostname`
+
+# paths/locations
+
+PREFIX="$HOME/.local"
+
+setpath PATH \
+    "$HOME/.rbenv/shims"    \
+    "$HOME/bin"             \
+    "$HOME/.rbenv/bin"      \
+    "$PREFIX/bin"           \
+    "/usr/local/bin"        \
+    "/usr/local/sbin"       \
+    "$PATH"
+
+# identity
+
+NAME='Henrik Hodne'
+EMAIL='me@henrikhodne.com'
+TZ='Europe/Oslo'
+
+# preferred programs
+
+EDITOR='vi'
+unset VISUAL
+PAGER='less'
+
+# libdefaults
+
+HOSTALIASES="$HOME/code/dotfiles/hostaliases"
+NCURSES_NO_UTF8_ACS="1"
+
+case $LANG in *.utf8)
+    # make `tree` work correctly
+    LANG="${LANG%.utf8}.utf-8"
+esac
+
+# appdefaults
+
+ACK_PAGER="$PAGER"
+LESS="e M q R F X z -3"
+# TODO: Find an OS X equivalent of nproc
+# MAKEFLAGS="-j $(nproc)"
+
+# local
+
+if [ -f ~/code/dotfiles/environ-$HOSTNAME ]; then
+    . ~/code/dotfiles/environ-$HOSTNAME
+elif [ -f ~/.environ-$HOSTNAME ]; then
+    . ~/.environ-$HOSTNAME
+fi
+
+# disable allexport
+
+set +a

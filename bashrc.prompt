@@ -1,0 +1,188 @@
+#!bash
+# bashrc -- shell prompt, window title, command exit status in prompt
+# (note: depends on $havecolor being set, see main bashrc)
+
+# This function automatically collapses long paths to fit on screen.
+# It is invoked from within $PS1 below.
+
+_awesome_prompt() {
+    local maxwidth=${COLUMNS:-$(tput cols)}
+
+    # hostname (already displayed by PS1) -- TODO: move here
+    # + 1 (space after hostname)
+    # + 2 ("…/")
+    # + 1 (trailing space to avoid hitting rmargin)
+    (( maxwidth -= ${#HOSTNAME} + 4 ))
+
+    ## Right side: Git branch, etc
+
+    local br=
+
+    if have git && git rev-parse --git-dir &>/dev/null; then
+        br=$(git symbolic-ref HEAD 2>/dev/null) ||
+        br=$(git rev-parse --short HEAD 2>/dev/null)
+        br=${br#refs/heads/}
+        # branch
+        # + 1 (space before branch)
+        (( maxwidth -= ${#br} + 1 ))
+    fi
+
+    ## Center: working directory
+
+    local wd=${PWD/#$HOME/\~} wdhead= wdtail= collapsed=0
+
+    if [[ $wd == '~' ]]; then
+        wdhead='' wdtail=$wd
+    else
+        wdhead=${wd%/*}/ wdtail=${wd##*/}
+    fi
+
+    if [[ ${wd:0:2} == '~/' ]]; then
+        (( maxwidth -= 2 ))
+    fi
+
+    if (( ${#wdtail} > maxwidth )); then
+        wdhead=${wdhead##*/}
+        collapsed=1
+    else
+        while (( ${#wdhead} + ${#wdtail} > maxwidth )); do
+            wdhead=${wdhead#*/}
+            collapsed=1
+        done
+    fi
+
+    if (( collapsed )); then
+        wdhead='…/'$wdhead
+        if [[ ${wd:0:2} == '~/' ]]; then
+            wdhead='~/'$wdhead
+        fi
+    fi
+
+    ## Output
+
+    printf '\001\e[%sm\002%s' \
+        "$color_pwd" "$wdheadh" \
+        "$color_pwd" "$wdtail"  \
+        ""           " "        \
+        "$color_vcs" "$br"      \
+        ""                      ;
+}
+
+_is_remote() {
+    [[ $SSH_TTY || $LOGIN || $REMOTEHOST ]]
+}
+
+# Determine terminal capabilities
+
+case $TERM in
+    screen*)
+        titlestring='\e]0;%s\a';
+        wnamestring='\ek%s\e\\';;
+    [xkE]term*|rxvt*|cygwin|dtterm)
+        titlestring='\e]0;%s\a';
+        wnamestring=;;
+    *)
+        titlestring=;
+        wnamestring=;;
+esac
+
+settitle() { [[ $titlestring ]] && printf "$titlestring" "$*"; }
+
+setwname() { [[ $wnamestring ]] && printf "$wnamestring" "$*"; }
+
+# Set prompts (PS1, PS2, &c.)
+
+if (( havecolor )); then
+    PS1="\n"
+    if (( $UID == 0 )); then
+        color_name='37;41'
+        item='\h'
+        prompt='#'
+    elif [[ $USER == "dvyjones" ]]; then
+        if (( havecolor == 256 )); then
+            color_name='38;5;71'
+        else
+            color_name='32'
+        fi
+        item='\h'
+        prompt='$'
+    else
+        color_name='33'
+        item='\u@\h'
+        prompt='$'
+    fi
+
+    if (( havecolor == 256 )); then
+        color_pwd='38;5;144'
+        color_cwd='1'
+        color_vcs='38;5;167'
+        color_prompt=''
+    else
+        color_pwd='33'
+        color_cwd='1'
+        color_vcs='1;31'
+        color_prompt=''
+    fi
+
+    _is_remote && prompt='^'
+
+    PS1+="\[\e[0;1m\e[\${color_name}m\]${item}\[\e[m\] "
+    [[ $TAG ]] &&
+        PS1+="\[\e[0;34m\]${TAG}:\[\em\]"
+    PS1+="\$(_awesome_prompt)\n"
+    PS1+="\[\e[m\e[\${color_prompt}m\]\${prompt}\[\e[m\] "
+
+    PS2="\[\e[0;1;30m\]...\[\e[m\] "
+    PS4="+\e[34m\${BASH_SOURCE:--}:\e[1m\$LINENO\e[m:\${FUNCNAME:+\e[33m\$FUNCNAME\e[m} "
+else
+    PS1='\n\u@\h \w\n\$ '
+    PS2='... '
+    PS4="+\${BASH_SOURCE:--}:\$LINENO:\$FUNCNAME "
+fi
+
+export -n PS1 PS2; export PS4
+
+# Update tmux window name before command
+
+_pre_update_title() {
+    local cmd=${BASH_COMMAND}
+    case ${cmd%% *} in
+        _*)     ;;
+        sudo)   cmd=${BASH_COMMAND#sudo }
+                ;&
+        *)      cmd=${cmd%% *}
+                setwname "<$cmd>"
+    esac
+    return 0
+}
+
+trap "_pre_update_title" DEBUG
+
+# Show status, update window title after command
+
+_show_status() {
+    local status=$?
+    (( status > 0 )) &&
+        printf "\e[0;33m%s\e[m\n" "(returned $status)"
+}
+
+_update_title() {
+    if [[ ! $title ]]; then
+        local title=
+        [[ $USER != 'dvyjones' ]] &&
+            title+="$USER@"
+        title+="$HOSTNAME ${PWD/#$HOME/~}"
+        [[ $DISPLAY && ( $SSH_TTY || $DISPLAY != ':'* ) ]] &&
+            title+=" ($DISPLAY)"
+    fi
+    settitle "$title"
+    if [[ ! $wname ]]; then
+        local wname="${PWD/#$HOME/~}"
+        [[ $wname != '~' && $wname != '/' ]] &&
+            wname="${wname##*/}"
+        wname="{bash:$wname}"
+    fi
+    setwname "$wname"
+}
+
+PROMPT_COMMAND="_show_status; _update_title"
