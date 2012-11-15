@@ -98,7 +98,7 @@ if (( havecolor )); then
         color_name='37;41'
         item='\h'
         prompt='#'
-    elif [[ $USER == "dvyjones" ]]; then
+    elif [[ $USER == "dvyjones" || $USER == "hodne2" ]]; then
         if (( havecolor == 256 )); then
             color_name='38;5;71'
         else
