@@ -41,7 +41,7 @@ setpath PATH \
 
 NAME='Henrik Hodne'
 EMAIL='me@henrikhodne.com'
-TZ='Europe/Oslo'
+TZ='America/Chicago'
 
 # preferred programs
 
